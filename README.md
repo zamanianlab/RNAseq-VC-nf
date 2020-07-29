@@ -1,2 +1,2 @@
-# RNAseq-VC-nf
-Nextflow script for running a variant calling pipeline on RNA-seq data
+# HP_RNAseq-nf
+nf dual RNA-seq pipeline for host (Aedes) and parasite (WB)
