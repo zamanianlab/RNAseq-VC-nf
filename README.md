@@ -1,2 +1,2 @@
-# HP_RNAseq-nf
-nf dual RNA-seq pipeline for host (Aedes) and parasite (WB)
+# RNAseq-VC-nf
+Nextflow pipeline for calling variants in RNA-seq data using FreeBayes and/or GATK
