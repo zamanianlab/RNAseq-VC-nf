@@ -111,21 +111,21 @@ process qual_by_depth {
       """
 }
 
-// process allelic_balance {
-//
-//       publishDir "${output}/vcfs", mode: 'copy', pattern: '*_filter.bcf'
-//
-//       input:
-//           tuple val(id), file(vcf) from qual_depth_filter
-//
-//       output:
-//           tuple val(id), file("${id}_5_filter.bcf") into allele_filter
-//
-//       when:
-//           params.vcf
-//
-//       """
-//           bcftools filter --threads 8 -e 'MAF < 0.2' -Ob -o ${id}_5_filter.bcf ${vcf}
-//           bcftools index ${id}_5_filter.bcf
-//       """
-// }
+process allelic_balance {
+
+      publishDir "${output}/vcfs", mode: 'copy', pattern: '*_filter.bcf'
+
+      input:
+          tuple val(id), file(vcf) from qual_depth_filter
+
+      output:
+          tuple val(id), file("${id}_5_filter.bcf") into allele_filter
+
+      when:
+          params.vcf
+
+      """
+          bcftools filter --threads 8 -e 'MAF < 0.2' -Ou | bcftools filter --threads 8 -e 'FORMAT/AO < 3' -Ob -o ${id}_5_filter.bcf ${vcf}
+          bcftools index ${id}_5_filter.bcf
+      """
+}
