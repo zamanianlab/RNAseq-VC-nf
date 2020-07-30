@@ -11,7 +11,7 @@ small_core = config.small_core
 
 // Parameters
 params.vcf = null
-params.filter = necator_americanus_3_label
+params.filter = null
 
 // Arguments allow you to choose which processes to run
 // Note: when providing arguments, the vcf file parameter needs to include the
@@ -38,8 +38,6 @@ process variant_annotate {
           params.vcf && params.filter
 
       """
-          snpEff download Aedes_aegypti
-
-          snpEff -v -t ${large_core} -c /home/linuxbrew/.linuxbrew/opt/snpeff/share/snpeff/snpEff.config Aedes_aegypti ${vcf} > ${id}_ann.vcf
+         bcftools view --threads ${large_core} -Ov ${vcf} | snpEff -v Aedes_aegypti - > ${id}_ann.vcf
       """
 }
