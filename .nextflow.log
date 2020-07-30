@@ -1,0 +1,72 @@
+Jul-30 10:16:53.284 [main] DEBUG nextflow.cli.Launcher - $> nextflow run variant_filtration.nf -w /home/BIOTECH/zamanian/GitHub/RNAseq-VC-nf/work --vcf /home/BIOTECH/zamanian/GitHub/HP_RNAseq-nf/h_output/vcfs/
+Jul-30 10:16:53.462 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 20.01.0
+Jul-30 10:16:53.479 [main] INFO  nextflow.cli.CmdRun - Launching `variant_filtration.nf` [zen_murdock] - revision: 696417f014
+Jul-30 10:16:53.513 [main] DEBUG nextflow.config.ConfigBuilder - Found config local: /home/linuxbrew/nextflow/RNAseq-VC-nf/nextflow.config
+Jul-30 10:16:53.514 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /home/linuxbrew/nextflow/RNAseq-VC-nf/nextflow.config
+Jul-30 10:16:53.565 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
+Jul-30 10:16:54.607 [main] DEBUG nextflow.Session - Session uuid: 4e5432af-8bd9-4806-885b-9e5b9c1f8817
+Jul-30 10:16:54.607 [main] DEBUG nextflow.Session - Run name: zen_murdock
+Jul-30 10:16:54.608 [main] DEBUG nextflow.Session - Executor pool size: 8
+Jul-30 10:16:54.637 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 20.01.0 build 5264
+  Created: 12-02-2020 10:14 UTC (04:14 CDT)
+  System: Linux 3.10.0-1127.8.2.el7.x86_64
+  Runtime: Groovy 2.5.8 on Java HotSpot(TM) 64-Bit Server VM 1.8.0_181-b13
+  Encoding: UTF-8 (UTF-8)
+  Process: 31611@brc6.secure.biotech.wisc.edu [10.128.43.76]
+  CPUs: 8 - Mem: 39.1 GB (1007.8 MB) - Swap: 4 GB (3.9 GB)
+Jul-30 10:16:54.854 [main] DEBUG nextflow.Session - Work-dir: /home/BIOTECH/zamanian/GitHub/RNAseq-VC-nf/work [nfs]
+Jul-30 10:16:54.855 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /home/linuxbrew/nextflow/RNAseq-VC-nf/bin
+Jul-30 10:16:54.914 [main] DEBUG nextflow.Session - Observer factory: TowerFactory
+Jul-30 10:16:54.919 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Jul-30 10:16:55.300 [main] DEBUG nextflow.Session - Session start invoked
+Jul-30 10:16:55.792 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Jul-30 10:16:55.816 [main] DEBUG nextflow.Session - Workflow process names [dsl1]: filter_variants
+Jul-30 10:16:55.817 [main] WARN  nextflow.script.BaseScript - The access of `config` object is deprecated
+Jul-30 10:16:55.831 [main] WARN  nextflow.script.BaseScript - The access of `config` object is deprecated
+Jul-30 10:16:55.832 [main] WARN  nextflow.script.BaseScript - The access of `config` object is deprecated
+Jul-30 10:16:55.832 [main] WARN  nextflow.script.BaseScript - The access of `config` object is deprecated
+Jul-30 10:16:55.832 [main] WARN  nextflow.script.BaseScript - The access of `config` object is deprecated
+Jul-30 10:16:55.832 [main] WARN  nextflow.script.BaseScript - The access of `config` object is deprecated
+Jul-30 10:16:55.938 [PathVisitor-1] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/BIOTECH/zamanian/GitHub/HP_RNAseq-nf/h_output/vcfs/; pattern: *.vcf.gz; options: [:]
+Jul-30 10:16:56.097 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Jul-30 10:16:56.098 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Jul-30 10:16:56.106 [main] DEBUG nextflow.executor.Executor - [warm up] executor > local
+Jul-30 10:16:56.114 [main] DEBUG n.processor.LocalPollingMonitor - Creating local task monitor for executor 'local' > cpus=8; memory=39.1 GB; capacity=8; pollInterval=100ms; dumpInterval=5m
+Jul-30 10:16:56.194 [main] DEBUG nextflow.processor.TaskProcessor - Creating operator > filter_variants -- maxForks: 8; blocking: false
+Jul-30 10:16:56.230 [main] DEBUG nextflow.script.ScriptRunner - > Await termination 
+Jul-30 10:16:56.230 [main] DEBUG nextflow.Session - Session await
+Jul-30 10:16:56.545 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Jul-30 10:16:56.553 [Task submitter] INFO  nextflow.Session - [a8/c9677c] Submitted process > filter_variants (1)
+Jul-30 10:16:56.571 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Jul-30 10:16:56.572 [Task submitter] INFO  nextflow.Session - [c8/800a76] Submitted process > filter_variants (2)
+Jul-30 10:17:34.645 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 2; name: filter_variants (1); status: COMPLETED; exit: 0; error: -; workDir: /home/BIOTECH/zamanian/GitHub/RNAseq-VC-nf/work/a8/c9677cc576253b445e116062c68714]
+Jul-30 10:17:34.656 [Task monitor] DEBUG nextflow.processor.TaskProcessor - Process `filter_variants (1)` is unable to find [UnixPath]: `/home/BIOTECH/zamanian/GitHub/RNAseq-VC-nf/work/a8/c9677cc576253b445e116062c68714/Ref_4_filter.bcf` (pattern: `Ref_4_filter.bcf`)
+Jul-30 10:17:34.681 [Task monitor] ERROR nextflow.processor.TaskProcessor - Error executing process > 'filter_variants (1)'
+
+Caused by:
+  Missing output file(s) `Ref_4_filter.bcf` expected by process `filter_variants (1)`
+
+Command executed:
+
+  ### Remove indels
+  bcftools view --threads 8 --exclude-types indels -Ob -o Ref_1_filter.bcf Ref.vcf.gz
+  bcftools index Ref_1_filter.bcf
+
+Command exit status:
+  0
+
+Command output:
+  (empty)
+
+Work dir:
+  /home/BIOTECH/zamanian/GitHub/RNAseq-VC-nf/work/a8/c9677cc576253b445e116062c68714
+
+Tip: when you have fixed the problem you can continue the execution adding the option `-resume` to the run command line
+Jul-30 10:17:34.694 [Task monitor] DEBUG nextflow.Session - Session aborted -- Cause: Missing output file(s) `Ref_4_filter.bcf` expected by process `filter_variants (1)`
+Jul-30 10:17:34.720 [main] DEBUG nextflow.Session - Session await > all process finished
+Jul-30 10:17:34.721 [main] DEBUG nextflow.Session - Session await > all barriers passed
+Jul-30 10:17:34.731 [main] WARN  n.processor.TaskPollingMonitor - Killing pending tasks (1)
+Jul-30 10:17:34.748 [main] DEBUG nextflow.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=0; failedCount=1; ignoredCount=0; cachedCount=0; pendingCount=0; submittedCount=0; runningCount=1; retriesCount=0; abortedCount=0; succeedDuration=0ms; failedDuration=38s; cachedDuration=0ms;loadCpus=0; loadMemory=0; peakRunning=2; peakCpus=2; peakMemory=0; ]
+Jul-30 10:17:34.910 [main] DEBUG nextflow.CacheDB - Closing CacheDB done
+Jul-30 10:17:34.921 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye

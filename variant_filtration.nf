@@ -47,7 +47,7 @@ process filter_variants {
 
       """
           ### Remove indels
-          bcftools view -H --exclude-types indels -Ob -o ${id}_1_filter.bcf ${vcf}
+          bcftools view --threads 8 --exclude-types indels -Ob -o ${id}_1_filter.bcf ${vcf}
           bcftools index ${id}_1_filter.bcf
       """
 
