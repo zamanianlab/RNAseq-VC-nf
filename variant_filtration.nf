@@ -88,28 +88,28 @@ process minimum_depth {
       """
 }
 
-// process qual_by_depth {
-//
-//       publishDir "${output}/vcfs", mode: 'copy', pattern: '*_filter.bcf'
-//
-//       input:
-//           tuple val(id), file(og_vcf) from vcf2
-//           tuple val(id), file(filt_vcf) from min_depth_filter
-//
-//       output:
-//           tuple val(id), file("${id}_4_filter.bcf") into qual_depth_filter
-//
-//       when:
-//           params.vcf
-//
-//       """
-//           AVG_DP=$(bcftools view -H ${og_vcf} | cut -f8 | grep -oe "DP=[0-9]*" | sed -s 's/DP=//g' | gawk '{ sum += $1; n++ } END { if (n > 0) print sum / n; }')
-//           DP_THRESH=$(echo "\$AVG_DP + 4 * (sqrt(\$AVG_DP))" | bc)
-//
-//           bcftools filter --threads 8 -e 'QUAL < \$DP_THRESH * 2 && INFO/DP > \$DP_THRESH' -Ob -o ${id}_4_filter.bcf ${filt_vcf}
-//           bcftools index ${id}_4_filter.bcf
-//       """
-// }
+process qual_by_depth {
+
+      publishDir "${output}/vcfs", mode: 'copy', pattern: '*_filter.bcf'
+
+      input:
+          tuple val(id), file(og_vcf) from vcf2
+          tuple val(id), file(filt_vcf) from min_depth_filter
+
+      output:
+          tuple val(id), file("${id}_4_filter.bcf") into qual_depth_filter
+
+      when:
+          params.vcf
+
+      """
+          AVG_DP=$(bcftools view -H ${og_vcf} | cut -f8 | grep -oe "DP=[0-9]*" | sed -s 's/DP=//g' | gawk '{ sum += $1; n++ } END { if (n > 0) print sum / n; }')
+          DP_THRESH=$(echo "\$AVG_DP + 4 * (sqrt(\$AVG_DP))" | bc)
+
+          bcftools filter --threads 8 -e 'QUAL < \$DP_THRESH * 2 && INFO/DP > \$DP_THRESH' -Ob -o ${id}_4_filter.bcf ${filt_vcf}
+          bcftools index ${id}_4_filter.bcf
+      """
+}
 
 // process allelic_balance {
 //
