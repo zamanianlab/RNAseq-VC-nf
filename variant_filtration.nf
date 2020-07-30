@@ -25,7 +25,7 @@ if (params.vcf) {
                     .map{file -> tuple(file.simpleName, file)}
 } else exit 1, 'No path to data was provided.'
 
-input_vcf.into { vcf1, vcf2}
+input_vcf.into { vcf1; vcf2}
 
 // https://arxiv.org/pdf/1404.0929.pdf
 // http://bcb.io/2014/05/12/wgs-trio-variant-evaluation/
