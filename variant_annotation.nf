@@ -43,7 +43,9 @@ if (params.vcf) {
 
 process variant_annotate {
 
-      publishDir "${output}/vcfs", mode: 'copy', pattern: '*_ann.vcf'
+      publishDir "${output}/annotations", mode: 'copy', pattern: '*_ann.vcf'
+      publishDir "${output}/annotations", mode: 'copy', pattern: '*.html'
+      publishDir "${output}/annotations", mode: 'copy', pattern: '*.txt'
 
       input:
           tuple val(id), file(vcf) from input_vcf
