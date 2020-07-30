@@ -27,6 +27,20 @@ if (params.vcf) {
                     .map{file -> tuple(file.simpleName, file)}
 } else exit 1, 'No path to data was provided.'
 
+// Manually made snpEff genome index for the VectorBase version of Aedes_aegypti:
+//    mkdir /home/linuxbrew/.linuxbrew/Cellar/snpeff/4.3t/share/snpeff/data/Aedes_aegypti_VB
+//    cp cp /mnt/genomes/Other/Aedes_aegypti/genome.fa /home/linuxbrew/.linuxbrew/Cellar/snpeff/4.3t/share/snpeff/data/Aedes_aegypti_VB/sequences.fa
+//    cp cp /mnt/genomes/Other/Aedes_aegypti/annotation/geneset_h.gtf /home/linuxbrew/.linuxbrew/Cellar/snpeff/4.3t/share/snpeff/data/Aedes_aegypti_VB/genes.gtf
+//    sed -i "s/>\(.*\) dna:.*/>\1/" sequences.fa
+//    wget https://beta.vectorbase.org/common/downloads/release-47/AaegyptiLVP_AGWG/fasta/data/VectorBase-47_AaegyptiLVP_AGWG_AnnotatedCDSs.fasta
+//    wget https://beta.vectorbase.org/common/downloads/release-47/AaegyptiLVP_AGWG/fasta/data/VectorBase-47_AaegyptiLVP_AGWG_AnnotatedProteins.fasta
+//    cat VectorBase-47_AaegyptiLVP_AGWG_AnnotatedCDSs.fasta | perl -pe "s/>(.*?) .*/>\1/" > cds.fa
+//    cat VectorBase-47_AaegyptiLVP_AGWG_AnnotatedProteins.fasta | perl -pe "s/>(.*?)-P(.) .*/>\1-R\2/" > protein.fa
+
+// Removed a handful of small contigs that were causing build errors
+
+// snpEff build -gtf22 -v Aedes_aegypti_VB
+
 process variant_annotate {
 
       publishDir "${output}/vcfs", mode: 'copy', pattern: '*_ann.vcf'
@@ -38,8 +52,6 @@ process variant_annotate {
           params.vcf && params.filter
 
       """
-          snpEff download Aedes_aegypti
-
-          snpEff -v -t ${large_core} -c /home/linuxbrew/.linuxbrew/opt/snpeff/share/snpeff/snpEff.config Aedes_aegypti ${vcf} > ${id}_ann.vcf
+          snpEff -v -t ${large_core} Aedes_aegypti_VB ${vcf} > ${id}_ann.vcf
       """
 }
