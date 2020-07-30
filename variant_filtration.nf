@@ -13,10 +13,9 @@ small_core = config.small_core
 params.vcf = null
 
 // Arguments allow you to choose which processes to run
-// Note: when providing arguments, the fq files only need to have the path after "/home/BIOTECH/zamanian/data/"
-// and the bam files only need to have the path after "/home/BIOTECH/zamanian/GitHub/${repo}/h_output/"
-// arguments need to be in single-quotes
-if( params.vcf ) error "Missing parameter"
+// Note: when providing arguments, the vcf file parameter needs to include the
+// full path in single-quotes
+if( !params.vcf ) error "Missing parameter"
 
 input_fq = Channel.empty()
 input_bam = Channel.empty()
