@@ -52,25 +52,25 @@ process filter_variants {
           bcftools index ${id}_1_filter.bcf
 
           ### Quality filter
-          bcftools filter --threads 8 -e 'QUAL < 30' -Ob -o ${id}_2_filter.bcf ${id}_1_filter.bcf
-          bcftools index ${id}_2_filter.bcf
+          # bcftools filter --threads 8 -e 'QUAL < 30' -Ob -o ${id}_2_filter.bcf ${id}_1_filter.bcf
+          # bcftools index ${id}_2_filter.bcf
 
           ### Minimum depth filter
-          bcftools filter --threads 8 -e 'INFO/DP < 10' -Ob -o ${id}_3_filter.bcf ${id}_2_filter.bcf
-          bcftools index ${id}_3_filter.bcf
+          # bcftools filter --threads 8 -e 'INFO/DP < 10' -Ob -o ${id}_3_filter.bcf ${id}_2_filter.bcf
+          # bcftools index ${id}_3_filter.bcf
 
           ### Quality by depth filter
           # Get average depth
-          AVG_DP=$(bcftools view -H ${vcf} | cut -f8 | grep -oe "DP=[0-9]*" | sed -s 's/DP=//g' | gawk '{ sum += $1; n++ } END { if (n > 0) print sum / n; }')
+          # AVG_DP=$(bcftools view -H ${vcf} | cut -f8 | grep -oe "DP=[0-9]*" | sed -s 's/DP=//g' | gawk '{ sum += $1; n++ } END { if (n > 0) print sum / n; }')
           # Calculate the average depth plus 4 times the square root of the average depth
-          DP_THRESH=$(echo "\$AVG_DP + 4 * (sqrt(\$AVG_DP))" | bc)
+          # DP_THRESH=$(echo "\$AVG_DP + 4 * (sqrt(\$AVG_DP))" | bc)
           # Filter
-          bcftools filter --threads 8 -e 'QUAL < \$DP_THRESH * 2 && INFO/DP > \$DP_THRESH' -Ob -o ${id}_4_filter.bcf ${id}_3_filter.bcf
-          bcftools index ${id}_4_filter.bcf
+          # bcftools filter --threads 8 -e 'QUAL < \$DP_THRESH * 2 && INFO/DP > \$DP_THRESH' -Ob -o ${id}_4_filter.bcf ${id}_3_filter.bcf
+          # bcftools index ${id}_4_filter.bcf
 
           # Allelic-balance filter
-          bcftools filter --threads 8 -e 'MAF < 0.2' -Ob -o ${id}_5_filter.bcf ${id}_4_filter.bcf
-          bcftools index ${id}_5_filter.bcf
+          # bcftools filter --threads 8 -e 'MAF < 0.2' -Ob -o ${id}_5_filter.bcf ${id}_4_filter.bcf
+          # bcftools index ${id}_5_filter.bcf
       """
 
 }
