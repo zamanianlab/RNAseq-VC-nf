@@ -24,7 +24,7 @@ input_vcf = Channel.empty()
 
 if (params.vcf) {
   input_vcf = Channel
-                    .fromPath(output + "${params.vcf}/*.vcf.gz")
+                    .fromPath("${params.vcf}/*.vcf.gz")
                     .map{file -> tuple(file.simpleName, file)}
 } else exit 1, 'No path to data was provided.'
 
