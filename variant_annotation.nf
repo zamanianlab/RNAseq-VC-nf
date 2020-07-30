@@ -52,6 +52,6 @@ process variant_annotate {
           params.vcf && params.filter
 
       """
-         bcftools view --threads ${large_core} -Ov ${vcf} | snpEff -v Aedes_aegypti - > ${id}_ann.vcf
+         bcftools view --threads ${large_core} -Ov ${vcf} | snpEff -v Aedes_aegypti_VB - > ${id}_ann.vcf
       """
 }
