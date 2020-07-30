@@ -103,10 +103,10 @@ process qual_by_depth {
           params.vcf
 
       """
-          AVG_DP=$(bcftools view -H ${og_vcf} | cut -f8 | grep -oe "DP=[0-9]*" | sed -s 's/DP=//g' | gawk '{ sum += $1; n++ } END { if (n > 0) print sum / n; }')
-          DP_THRESH=$(echo "\$AVG_DP + 4 * (sqrt(\$AVG_DP))" | bc)
+          AVG_DP=`bcftools view -H ${og_vcf} | cut -f8 | grep -oe "DP=[0-9]*" | sed -s 's/DP=//g' | gawk '{ sum += \$1; n++ } END { if (n > 0) print sum / n; }'`
+          DP_THRESH=`echo "\$AVG_DP + 4 * (sqrt(\$AVG_DP))" | bc`
 
-          bcftools filter --threads 8 -e 'QUAL < \$DP_THRESH * 2 && INFO/DP > \$DP_THRESH' -Ob -o ${id}_4_filter.bcf ${filt_vcf}
+          bcftools filter --threads 8 -e "QUAL < \$DP_THRESH * 2 && INFO/DP > \$DP_THRESH" -Ob -o ${id}_4_filter.bcf ${filt_vcf}
           bcftools index ${id}_4_filter.bcf
       """
 }
