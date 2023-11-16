@@ -25,7 +25,7 @@ params.vcf = null
 // Note: when providing arguments, the fq files only need to have the path after "/home/BIOTECH/zamanian/data/"
 // and the bam files only need to have the path after "/home/BIOTECH/zamanian/GitHub/${repo}/h_output/"
 // arguments need to be in single-quotes
-if( !params.fq & !params.bam & !params.vcf ) error "Missing parameter"
+if( !params.dir & !params.bam & !params.vcf ) error "Missing parameter"
 
 input_dir = Channel.empty()
 input_bam = Channel.empty()
@@ -65,7 +65,7 @@ process trim_reads {
     tag { id }
 
     when:
-        params.fq || params.bam
+        params.dir || params.bam
 
     input:
         tuple val(id), file(forward), file(reverse) from fqs
@@ -111,7 +111,7 @@ process star_align_first {
     maxForks 6
 
     when:
-        params.fq && !params.bam
+        params.dir && !params.bam
 
     input:
         tuple val(id), file(forward), file(reverse) from trimmed_reads_star1
@@ -178,7 +178,7 @@ process star_align_second {
         tuple val(id), file("${id}.bam") into bam_files
 
     when:
-        params.fq && !params.bam
+        params.dir && !params.bam
 
     """
         SM=`echo ${id} | cut -c1-3 | tr -d '\n'`
