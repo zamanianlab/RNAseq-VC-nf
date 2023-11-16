@@ -87,8 +87,7 @@ process trim_reads {
 
 //star_index = Channel.fromPath(genomes + "${aedesgenome}/STARIndex/").collect() #genomes folder isn't set up quite yet
 
-star_index = Channel.fromPath(input + "/${aedesgenome}/STAR_index/")
-    .collect() 
+star_index = Channel.fromPath(input + "/Aeaeg_index/STAR_index/").collect() 
 
 
 ////////////////////////////////////////////////
