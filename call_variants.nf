@@ -27,18 +27,18 @@ params.vcf = null
 // arguments need to be in single-quotes
 if( !params.fq & !params.bam & !params.vcf ) error "Missing parameter"
 
-input_fq = Channel.empty()
+input_dir = Channel.empty()
 input_bam = Channel.empty()
 input_vcf = Channel.empty()
 
-if (params.fq && !params.bam) {
-  input_fq = Channel
+if (params.dir && !params.bam) {
+  input_dir = Channel
                     .fromFilePairs(input + "/${params.dir}/*_{1,2}.fq.gz", flat: true)
-} else if (params.fq && params.bam) {
+} else if (params.dir && params.bam) {
   input_bam = Channel
                     .fromPath(output + "/${params.bam}/*.bam")
                     .map{file -> tuple(file.baseName, file)}
-  input_fq = Channel
+  input_dir = Channel
                     .fromFilePairs(input + "/${params.dir}/*_{1,2}.fq.gz", flat: true)
 } else if (params.vcf) {
   input_vcf = Channel
