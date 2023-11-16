@@ -15,7 +15,7 @@ small=params.small
 // Parameters
 params.aedesgenome = null
 if( !params.aedesgenome ) error "Missing aedesgenome parameter"
-println "aedesgenome: $param.aedesgenome"
+println "aedesgenome: $params.aedesgenome"
 
 params.dir = null
 params.bam = null
