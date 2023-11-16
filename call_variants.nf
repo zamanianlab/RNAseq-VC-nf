@@ -1,16 +1,23 @@
 #!/usr/bin/env nextflow
 
 // Edit nextflow.configuration!
-data=config.data_location // brc_location (btc) or data_location (other)
-aux=config.aux_location
-output=config.houtput_location
-aedesgenome=config.aedesgenome_location
+input=params.input
+output=params.output
+aux=params.aux
+genomes=params.genomes
 
 large_core=config.large_core
 small_core=config.small_core
 
+big=params.big
+small=params.small
+
 // Parameters
-params.fq = null
+params.aedesgenome = null
+if( !params.aedesgenome ) error "Missing aedesgenome parameter"
+println "aedesgenome: $param.aedesgenome"
+
+params.dir = null
 params.bam = null
 params.vcf = null
 
@@ -26,16 +33,16 @@ input_vcf = Channel.empty()
 
 if (params.fq && !params.bam) {
   input_fq = Channel
-                    .fromFilePairs(data + "${params.fq}/*_{1,2}.fq.gz", flat: true)
+                    .fromFilePairs(input + "/${params.dir}/*_{1,2}.fq.gz", flat: true)
 } else if (params.fq && params.bam) {
   input_bam = Channel
-                    .fromPath(output + "${params.bam}/*.bam")
+                    .fromPath(output + "/${params.bam}/*.bam")
                     .map{file -> tuple(file.baseName, file)}
   input_fq = Channel
-                    .fromFilePairs(data + "${params.fq}/*_{1,2}.fq.gz", flat: true)
+                    .fromFilePairs(input + "/${params.dir}/*_{1,2}.fq.gz", flat: true)
 } else if (params.vcf) {
   input_vcf = Channel
-                    .fromPath(output + "${params.vcf}/*.vcf.gz")
+                    .fromPath(output + "/${params.vcf}/*.vcf.gz")
                     .map{file -> tuple(file.simpleName, file)}
 } else exit 1, 'No path to data was provided.'
 
@@ -43,7 +50,8 @@ if (params.fq && !params.bam) {
 // ** - Pull in fq files (paired); change file regular expression as needed
 ////////////////////////////////////////////////
 
-// fq_pairs = Channel.fromFilePairs(data + "${params.dir}/*_{1,2}.fq.gz", flat: true)
+ fq_pairs = Channel.fromFilePairs(input + "/${params.dir}/*_{1,2}.fq.gz", flat: true)
+        .set { fqs }
 
 ////////////////////////////////////////////////
 // ** TRIM READS
@@ -51,22 +59,24 @@ if (params.fq && !params.bam) {
 
 process trim_reads {
 
-    tag "$id"
-    publishDir "${output}/trim_stats/", mode: 'copy', pattern: '*.html'
-    publishDir "${output}/trim_stats/", mode: 'copy', pattern: '*.json'
+    publishDir "${output}/${params.dir}/trim_stats/", mode: 'copy', pattern: '*.{json,html}'
 
-    input:
-        tuple val(id), file(forward), file(reverse) from input_fq
-
-    output:
-        tuple id, file("${id}_R1.fq.gz"), file("${id}_R2.fq.gz") into trimmed_reads_star1, trimmed_reads_star2, trimmed_reads_picard
-        tuple file("*.html"), file("*.json") into trim_log
+    cpus small
+    tag { id }
 
     when:
         params.fq || params.bam
 
+    input:
+        tuple val(id), file(forward), file(reverse) from fqs
+
+    output:
+     //   tuple id, file("${id}_R1.fq.gz"), file("${id}_R2.fq.gz") into trimmed_reads_star1, trimmed_reads_star2, trimmed_reads_picard
+        tuple id, file("${id}_1.fq.gz"), file("${id}_2.fq.gz") into trimmed_reads_star1, trimmed_reads_star2, trimmed_reads_picard
+        tuple file("*.html"), file("*.json") into trim_log
+
    """
-       fastp -i ${forward} -I ${reverse} -o ${id}_R1.fq.gz -O ${id}_R2.fq.gz -y -l 50 -h ${id}.html -j ${id}.json
+       fastp -i $forward -I $reverse -w ${task.cpus} -o ${id}_1_trimmed.fq.gz -O ${id}_2_trimmed.fq.gz -y -l 150 -h ${id}.html -j ${id}.json
    """
 }
 
@@ -75,7 +85,10 @@ process trim_reads {
 ////////////////////////////////////////////////
 // aedesgenome points to /mnt/genomes/Other/Aedes_aegypti/
 
-star_index = Channel.fromPath("${aedesgenome}/STARIndex/").collect()
+//star_index = Channel.fromPath(genomes + "${aedesgenome}/STARIndex/").collect() #genomes folder isn't set up quite yet
+
+star_index = Channel.fromPath(input + "/${aedesgenome}/STAR_index/").collect() 
+
 
 ////////////////////////////////////////////////
 // ** - STAR PIPELINE
@@ -88,11 +101,17 @@ star_index = Channel.fromPath("${aedesgenome}/STARIndex/").collect()
 // here, but not in the second-pass.
 process star_align_first {
 
-    publishDir "${output}/star_log", mode: 'copy', pattern: '*Log*'
-    publishDir "${output}/sj", mode: 'copy', pattern: '*.tab'
+    publishDir "${output}/${params.dir}/star", mode: 'copy', pattern: '*.Log.final.out'
+    publishDir "${output}/${params.dir}/star", mode: 'copy', pattern: '*.flagstat.txt'
+    publishDir "${output}/${params.dir}/counts", mode: 'copy', pattern: '*.ReadsPerGene.tab'
+    publishDir "${output}/${params.dir}/sj", mode: 'copy', pattern: '*.tab'
 
-    cpus large_core
-    tag "$id"
+    cpus big
+    tag { id }
+    maxForks 6
+
+    when:
+        params.fq && !params.bam
 
     input:
         tuple val(id), file(forward), file(reverse) from trimmed_reads_star1
@@ -100,24 +119,26 @@ process star_align_first {
 
     output:
         file("*out.tab") into mapped_splice_junctions
-
-    when:
-        params.fq && !params.bam
+        tuple file("${id}.Log.final.out"), file("${id}.flagstat.txt") into alignment_logs_star
+        file("${id}.ReadsPerGene.tab") into star_counts
 
     """
-        STAR \\
-          --readFilesIn ${forward} ${reverse} \\
-          --readFilesCommand zcat \\
-          --genomeDir ${index} \\
-          --genomeLoad LoadAndRemove \\
-          --runThreadN ${task.cpus} \\
-          --outFilterType BySJout \\
-          --alignIntronMax 1000000 \\
-          --alignMatesGapMax 1000000 \\
-          --outFilterMismatchNmax 999 \\
-          --outFilterMismatchNoverReadLmax 0.04 \\
-          --outFilterMultimapNmax 20 \\
-          --outFileNamePrefix ${id}.
+        STAR --readFilesIn ${forward} ${reverse} \
+          --readFilesCommand zcat \
+          --genomeDir ${index} \
+          --genomeLoad LoadAndRemove \
+          --runThreadN ${task.cpus} \
+          --outFilterType BySJout \
+          --alignIntronMax 1000000 \
+          --alignMatesGapMax 1000000 \
+          --outFilterMismatchNmax 999 \
+          --outFilterMismatchNoverReadLmax 0.04 \
+          --outFilterMultimapNmax 20 \
+          --outFileNamePrefix ${id}. \
+          --quantMode GeneCounts \
+          --peOverlapNbasesMin 10 
+          samtools flagstat ${id}.bam > ${id}.flagstat.txt
+          cat ${id}.ReadsPerGene.out.tab | cut -f 1,2 > ${id}.ReadsPerGene.tab
     """
 }
 
@@ -145,7 +166,7 @@ process star_align_second {
     publishDir "${output}/bams", mode: 'copy', pattern: '*.bam.bai'
 
     cpus large_core
-    tag "$id"
+    tag { id }
 
     input:
         tuple val(id), file(forward), file(reverse) from trimmed_reads_star2
@@ -221,7 +242,7 @@ process picard_fastq_uBAM {
           -LB "\$LB" \
           -PL illumina \
           -SO queryname \
-          -TMP_DIR /home/BIOTECH/zamanian/tmp
+          -TMP_DIR ${output}
     """
 }
 
@@ -247,7 +268,7 @@ process picard_sort_bam {
           -I ${bam} \
           -O ${id}_qn_sorted.bam \
           -SO queryname \
-          -TMP_DIR /home/BIOTECH/zamanian/tmp
+          -TMP_DIR ${output}
     """
 }
 
@@ -275,7 +296,7 @@ process picard_merge {
           -UNMAPPED ${ubam} \
           -O "${id}_merged.bam" \
           -R "${aedesgenome}/genome.fa" \
-          -TMP_DIR /home/BIOTECH/zamanian/tmp
+          -TMP_DIR ${output}
     """
 }
 
@@ -303,7 +324,7 @@ process picard_mark_duplicates {
           -I ${bam} \
           -O ${id}_duplicates.bam \
           -M ${id}_marked_dup_stats.txt \
-          -TMP_DIR /home/BIOTECH/zamanian/tmp
+          -TMP_DIR ${output}
 
     """
 }
@@ -328,7 +349,7 @@ process split_reads {
           -R "${aedesgenome}/genome.fa" \
           -I ${bam} \
           -O ${id}_split.bam \
-          -tmp-dir /home/BIOTECH/zamanian/tmp
+          -TMP_DIR ${output}
     """
 }
 
@@ -342,10 +363,10 @@ process fetch_variants {
         params.bam
 
     """
-        wget ftp://ftp.ensemblgenomes.org/pub/metazoa/release-46/variation/vcf/aedes_aegypti_lvpagwg/aedes_aegypti_lvpagwg.vcf.gz \
+        wget http://ftp.ensemblgenomes.org/pub/metazoa/release-57/variation/vcf/aedes_aegypti_lvpagwg/aedes_aegypti_lvpagwg.vcf.gz \
           -O known_variants.vcf.gz
 
-        wget ftp://ftp.ensemblgenomes.org/pub/metazoa/release-46/variation/vcf/aedes_aegypti_lvpagwg/aedes_aegypti_lvpagwg.vcf.gz.csi \
+        wget http://ftp.ensemblgenomes.org/pub/metazoa/release-57/variation/vcf/aedes_aegypti_lvpagwg/aedes_aegypti_lvpagwg.vcf.gz.csi \
           -O known_variants.vcf.gz.csi
 
         gatk IndexFeatureFile \
@@ -358,12 +379,12 @@ process fetch_variants {
 // and correct base-indexing when converting to BED. We have to use the shell
 // block to allow BASH and Nextflow variables.
 // Approach taken from https://github.com/gatk-workflows/gatk4-rnaseq-germline-snps-indels/blob/master/gatk4-rna-best-practices.wdl
-annotations = Channel.fromPath("${aedesgenome}/annotation/geneset_h.gtf", type: 'file')
+annotations = Channel.fromPath("${aedesgenome}/geneset.gff", type: 'file')
 
 process generate_intervals {
 
       input:
-          file(gtf) from annotations
+          file(gff) from annotations
 
       output:
           file("transcript.interval_list") into (intervals1, intervals2, intervals3)
@@ -374,11 +395,12 @@ process generate_intervals {
           params.bam
 
       shell:
+      //cat !{gff} | grep -E '\\stranscript\\s' | awk '{print $1 "\t" $4-1 "\t" $5}' > transcript_intervals.bed
       '''
-          cat !{gtf} | grep -E '\\stranscript\\s' | awk '{print $1 "\t" $4-1 "\t" $5}' > transcript_intervals.bed
+          cat !{gff} | awk '$3 ~/^mRNA/' | awk '{print $1 "\t" $4-1 "\t" $5}' > transcript_intervals.bed
 
           picard CreateSequenceDictionary \
-            R="!{aedesgenome}/genome.fa" \
+            R="!${aedesgenome}/genome.fa" \
             O=genome_picard.dict
 
           picard BedToIntervalList \
