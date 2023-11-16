@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-// Edit nextflow.configuration!
+// Edit chtc.configuration!
 input=params.input
 output=params.output
 aux=params.aux
@@ -50,7 +50,7 @@ if (params.dir && !params.bam) {
 // ** - Pull in fq files (paired); change file regular expression as needed
 ////////////////////////////////////////////////
 
- fq_pairs = Channel.fromFilePairs(input + "/${params.dir}/*_{1,2}.fq.gz", flat: true)
+ Channel.fromFilePairs(input + "/${params.dir}/*_{1,2}.fq.gz", flat: true)
         .set { fqs }
 
 ////////////////////////////////////////////////
@@ -87,7 +87,8 @@ process trim_reads {
 
 //star_index = Channel.fromPath(genomes + "${aedesgenome}/STARIndex/").collect() #genomes folder isn't set up quite yet
 
-star_index = Channel.fromPath(input + "/${aedesgenome}/STAR_index/").collect() 
+star_index = Channel.fromPath(input + "/${aedesgenome}/STAR_index/")
+    .collect() 
 
 
 ////////////////////////////////////////////////
