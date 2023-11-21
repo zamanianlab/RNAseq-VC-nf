@@ -87,7 +87,7 @@ process trim_reads {
 
 //star_index = Channel.fromPath(genomes + "${aedesgenome}/STARIndex/").collect() #genomes folder isn't set up quite yet
 
-star_index = Channel.fromPath(input + "/Aeaeg_index/STAR_index/").collect() 
+star_index = Channel.fromPath(input + "/${params.aedesgenome}/STAR_index/").collect() 
 
 
 ////////////////////////////////////////////////
@@ -242,7 +242,7 @@ process picard_fastq_uBAM {
           -LB "\$LB" \
           -PL illumina \
           -SO queryname \
-          -TMP_DIR ${output}
+          -TMP_DIR ${tmp}
     """
 }
 
@@ -268,7 +268,7 @@ process picard_sort_bam {
           -I ${bam} \
           -O ${id}_qn_sorted.bam \
           -SO queryname \
-          -TMP_DIR ${output}
+          -TMP_DIR ${tmp}
     """
 }
 
@@ -295,8 +295,8 @@ process picard_merge {
           -ALIGNED ${bam} \
           -UNMAPPED ${ubam} \
           -O "${id}_merged.bam" \
-          -R "${aedesgenome}/genome.fa" \
-          -TMP_DIR ${output}
+          -R "${params.aedesgenome}/genome.fa" \
+          -TMP_DIR ${tmp}
     """
 }
 
@@ -324,7 +324,7 @@ process picard_mark_duplicates {
           -I ${bam} \
           -O ${id}_duplicates.bam \
           -M ${id}_marked_dup_stats.txt \
-          -TMP_DIR ${output}
+          -TMP_DIR ${tmp}
 
     """
 }
@@ -346,10 +346,10 @@ process split_reads {
           --java-options \
           -Xmx4g \
           SplitNCigarReads \
-          -R "${aedesgenome}/genome.fa" \
+          -R "${params.aedesgenome}/genome.fa" \
           -I ${bam} \
           -O ${id}_split.bam \
-          -TMP_DIR ${output}
+          -TMP_DIR ${tmp}
     """
 }
 
@@ -379,7 +379,7 @@ process fetch_variants {
 // and correct base-indexing when converting to BED. We have to use the shell
 // block to allow BASH and Nextflow variables.
 // Approach taken from https://github.com/gatk-workflows/gatk4-rnaseq-germline-snps-indels/blob/master/gatk4-rna-best-practices.wdl
-annotations = Channel.fromPath("${aedesgenome}/geneset.gff", type: 'file')
+annotations = Channel.fromPath("${params.aedesgenome}/geneset.gff", type: 'file')
 
 process generate_intervals {
 
@@ -400,7 +400,7 @@ process generate_intervals {
           cat !{gff} | awk '$3 ~/^mRNA/' | awk '{print $1 "\t" $4-1 "\t" $5}' > transcript_intervals.bed
 
           picard CreateSequenceDictionary \
-            R="!${aedesgenome}/genome.fa" \
+            R="!${params.aedesgenome}/genome.fa" \
             O=genome_picard.dict
 
           picard BedToIntervalList \
@@ -428,7 +428,7 @@ process recalibrate_bases {
 
     """
         gatk BaseRecalibrator \
-          -R "${aedesgenome}/genome.fa" \
+          -R "${params.aedesgenome}/genome.fa" \
           --sequence-dictionary ${reference_dict} \
           -I ${bam} \
           -L ${intervals} \
@@ -455,7 +455,7 @@ process apply_recalibration {
 
     """
         gatk ApplyBQSR \
-          -R "${aedesgenome}/genome.fa" \
+          -R "${params.aedesgenome}/genome.fa" \
           --sequence-dictionary ${reference_dict} \
           -I ${bam} \
           -L ${intervals} \
@@ -537,12 +537,12 @@ process freebayes {
 
       """
           ## for attempting freebayes-parallel
-          # bedtools getfasta -fi "${aedesgenome}/genome.fa" -bed ${intervals} -fo transcript_intervals.fa
+          # bedtools getfasta -fi "${params.aedesgenome}/genome.fa" -bed ${intervals} -fo transcript_intervals.fa
           # samtools faidx transcript_intervals.fa
           # cat transcript_intervals.bed | awk '{print \$1 ":" \$2 "-" \$3}' > transcript_intervals.txt
 
           freebayes \
-            -f "${aedesgenome}/genome.fa" \
+            -f "${params.aedesgenome}/genome.fa" \
             -b ${bam} > "${id}.vcf"
 
           bgzip -@ 8 "${id}.vcf > ${id}.vcf.gz
