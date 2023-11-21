@@ -72,11 +72,11 @@ process trim_reads {
 
     output:
      //   tuple id, file("${id}_R1.fq.gz"), file("${id}_R2.fq.gz") into trimmed_reads_star1, trimmed_reads_star2, trimmed_reads_picard
-        tuple id, file("${id}_1.fq.gz"), file("${id}_2.fq.gz") into trimmed_reads_star1, trimmed_reads_star2, trimmed_reads_picard
+        tuple id, file("${id}_1_trim.fq.gz"), file("${id}_2_trim.fq.gz") into trimmed_reads_star1, trimmed_reads_star2, trimmed_reads_picard
         tuple file("*.html"), file("*.json") into trim_log
 
    """
-       fastp -i $forward -I $reverse -w ${task.cpus} -o ${id}_1_trimmed.fq.gz -O ${id}_2_trimmed.fq.gz -y -l 150 -h ${id}.html -j ${id}.json
+       fastp -i $forward -I $reverse -w ${task.cpus} -o ${id}_1_trim.fq.gz -O ${id}_2_trim.fq.gz -y -l 150 -h ${id}.html -j ${id}.json
    """
 }
 
@@ -570,7 +570,7 @@ process freebayes {
 //
 //       """
 //           gatk HaplotypeCaller \
-//             -R "${aedesgenome}/genome.fa" \
+//             -R "${params.aedesgenome}/genome.fa" \
 //             -I ${bam} \
 //             -L ${intervals} \
 //             -O ${id}.vcf.gz \
